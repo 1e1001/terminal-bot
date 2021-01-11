@@ -1,5 +1,5 @@
 const Discord = require("discord.js"); // imports the discord.js library
-const fs = require("fs"); // imports the filesystem library
+const fs = require("fs/promises"); // imports the promisified filesystem library
 const spawnSync = require("child_process").spawnSync;
 require("dotenv").config(); // load and configure .env file
 
@@ -18,16 +18,18 @@ client.on("message", async (message) => {
 			const cleaned = clean(evaled);
 			const sendString = `\`\`\`bash\n${cleaned}\n\`\`\``;
 			if (sendString.length >= 2000) {
-				return {
-					text: "The resulting output was too large, so here it is as a text file:",
-					file: cleaned,
-					name: "output.txt"
-				};
+				await fs.writeFile("output.txt", cleaned);
+				await message.reply("The resulting output was too large, so here it is as a text file:", {
+					files: [{
+						attachment: __dirname + "/output.txt",
+						name: "output.txt"
+					}]
+				});
 			} else {
-				return sendString;
+				await message.reply(sendString);
 			}
 		} catch (err) {
-			return `\`ERROR\` \`\`\`xl\n$s{clean(err)}\n\`\`\``;
+			await message.reply(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
 		}
 	}
 });
